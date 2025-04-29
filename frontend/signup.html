@@ -7,6 +7,13 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/4c729db828.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="signup.css">
+    <style>
+        .error-message {
+            color: red;
+            margin-top: 5px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <!-- Navbar -->
@@ -48,33 +55,82 @@
             <div class="col-lg-6">
                 <div class="signup-card">
                     <h2 class="text-center mb-4">Create Account</h2>
-                    <form action="../backend/signup.php" method="POST">
+                    <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+                    <form id="signupForm">
                         <div class="mb-3">
-                          <label for="name" class="form-label">Full Name</label>
-                          <input type="text" class="form-control" id="name" name="name" required>
+                            <label for="email" class="form-label">Email address</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
                         </div>
                         <div class="mb-3">
-                          <label for="email" class="form-label">Email address</label>
-                          <input type="email" class="form-control" id="email" name="email" required>
-                        </div>
-                        <div class="mb-3">
-                          <label for="password" class="form-label">Password</label>
-                          <input type="password" class="form-control" id="password" name="password" required>
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
                         </div>
                         <div class="mb-4">
-                          <label for="confirm-password" class="form-label">Confirm Password</label>
-                          <input type="password" class="form-control" id="confirm-password" required>
+                            <label for="confirm_password" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                            <div id="passwordError" class="error-message">Passwords do not match</div>
                         </div>
                         <button type="submit" class="btn-signup w-100">Create Account</button>
-                      </form>
-                      
+                    </form>
+                    <p class="text-center mt-4">Already have an account? <a href="login.html" class="login-link">Sign In</a></p>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="signup.js"></script>
+    <script>
+        const signupForm = document.getElementById('signupForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const passwordError = document.getElementById('passwordError');
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirm_password');
+        
+        // Check passwords match when typing
+        confirmPassword.addEventListener('input', function() {
+            if (password.value !== confirmPassword.value) {
+                passwordError.style.display = 'block';
+            } else {
+                passwordError.style.display = 'none';
+            }
+        });
+        
+        signupForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Reset error messages
+            errorMessage.style.display = 'none';
+            errorMessage.textContent = '';
+            
+            // Validate passwords match
+            if (password.value !== confirmPassword.value) {
+                passwordError.style.display = 'block';
+                return;
+            }
+            
+            const formData = new FormData(this);
+            
+            fetch('../backend/signup.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Registration successful! Please login.');
+                    window.location.href = 'login.html';
+                } else {
+                    errorMessage.textContent = data.message || 'Registration failed';
+                    errorMessage.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                errorMessage.textContent = 'An error occurred during registration';
+                errorMessage.style.display = 'block';
+            });
+        });
+    </script>
 </body>
 
 <!-- Footer Section -->

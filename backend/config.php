@@ -1,7 +1,13 @@
 <?php
-$db = new SQLite3('beats.db');
+$host = 'localhost';
+$dbname = 'ecommerce';
+$username = 'root';
+$password = '';
 
-if (!$db) {
-    die("Database connection failed: " . $db->lastErrorMsg());
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch(PDOException $e) {
+    die("Connection failed: " . $e->getMessage());
 }
 ?>

@@ -1,21 +1,34 @@
 <?php
-require 'config.php';
+require_once 'config.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = htmlspecialchars($_POST['name']);
-    $email = htmlspecialchars($_POST['email']);
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+    $confirmPassword = $_POST['confirm_password'];
 
-    $stmt = $db->prepare("INSERT INTO users (name, email, password) VALUES (:name, :email, :password)");
-    $stmt->bindValue(':name', $name, SQLITE3_TEXT);
-    $stmt->bindValue(':email', $email, SQLITE3_TEXT);
-    $stmt->bindValue(':password', $password, SQLITE3_TEXT);
+    try {
+        // Validate email
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid email format']);
+            exit;
+        }
 
-    if ($stmt->execute()) {
-        header("Location: ../login.html");
-        exit();
-    } else {
-        echo "Error: " . $db->lastErrorMsg();
+        // Check if email already exists
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        if ($stmt->fetch()) {
+            echo json_encode(['success' => false, 'message' => 'Email already exists']);
+            exit;
+        }
+
+        // Hash password and insert user
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $pdo->prepare("INSERT INTO users (email, password) VALUES (?, ?)");
+        $stmt->execute([$email, $hashedPassword]);
+
+        echo json_encode(['success' => true, 'message' => 'Registration successful']);
+    } catch(PDOException $e) {
+        echo json_encode(['success' => false, 'message' => 'Registration failed: ' . $e->getMessage()]);
     }
 }
 ?>
